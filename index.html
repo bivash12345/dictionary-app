@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dictionary App</title>
+</head>
+<body>
+
+<h2>📘 English → Bangla Dictionary</h2>
+
+<input id="eng" placeholder="English word">
+<input id="ban" placeholder="Bangla meaning">
+<button onclick="saveWord()">Save</button>
+
+<br><br>
+<ul id="list"></ul>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "dictionary-app-6ce65.firebaseapp.com",
+  databaseURL: "https://dictionary-app-6ce65-default-rtdb.firebaseio.com/",
+  projectId: "dictionary-app-6ce65",
+  storageBucket: "dictionary-app-6ce65.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Save word
+window.saveWord = function () {
+  let eng = document.getElementById("eng").value;
+  let ban = document.getElementById("ban").value;
+
+  if (eng === "" || ban === "") {
+    alert("Fill all fields");
+    return;
+  }
+
+  push(ref(db, "words"), {
+    english: eng,
+    bangla: ban
+  });
+
+  document.getElementById("eng").value = "";
+  document.getElementById("ban").value = "";
+};
+
+// Show words
+onValue(ref(db, "words"), (snapshot) => {
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+
+  snapshot.forEach((child) => {
+    let data = child.val();
+
+    let li = document.createElement("li");
+    li.innerText = data.english + " = " + data.bangla;
+
+    list.appendChild(li);
+  });
+});
+</script>
+
+</body>
+</html>
