@@ -2,26 +2,87 @@
 <html>
 <head>
   <title>Dictionary App</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f5f5f5;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    input {
+      padding: 10px;
+      margin: 5px;
+      width: 200px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin: 5px;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    li {
+      list-style: none;
+      background: white;
+      margin: 8px auto;
+      padding: 10px;
+      width: 300px;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .delete-btn {
+      background: red;
+      margin-left: 10px;
+    }
+
+    .delete-btn:hover {
+      background: darkred;
+    }
+  </style>
 </head>
+
 <body>
 
 <h2>📘 English → Bangla Dictionary</h2>
 
 <input id="eng" placeholder="English word">
 <input id="ban" placeholder="Bangla meaning">
+<br>
 <button onclick="saveWord()">Save</button>
 
 <br><br>
-<ul id="list"></ul>
+
+<input id="search" placeholder="🔍 Search..." oninput="searchWord()">
+
+<br><br>
+
+<ul id="list">Loading...</ul>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
 
-// ⚠️ তোমার Firebase config বসাও
+
+// 🔥 👉 নিজের Firebase config বসাও
 const firebaseConfig = {
-  apiKey: "AIzaSyDIejKxhqJRp2l3d9WGvANRZY8qGK16pXE",
+  apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
   databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com/",
   projectId: "YOUR_PROJECT",
@@ -30,16 +91,19 @@ const firebaseConfig = {
   appId: "XXXX"
 };
 
+
+// Init
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+
 // ✅ SAVE
 window.saveWord = function () {
-  let eng = document.getElementById("eng").value;
-  let ban = document.getElementById("ban").value;
+  let eng = document.getElementById("eng").value.trim();
+  let ban = document.getElementById("ban").value.trim();
 
   if (eng === "" || ban === "") {
-    alert("Fill all fields");
+    alert("⚠️ Fill all fields");
     return;
   }
 
@@ -52,6 +116,7 @@ window.saveWord = function () {
   document.getElementById("ban").value = "";
 };
 
+
 // ❌ DELETE
 window.deleteWord = function (key) {
   if (confirm("Delete this word?")) {
@@ -59,21 +124,51 @@ window.deleteWord = function (key) {
   }
 };
 
-// 📋 SHOW
+
+// 📋 SHOW DATA
 onValue(ref(db, "words"), (snapshot) => {
   let list = document.getElementById("list");
   list.innerHTML = "";
+
+  if (!snapshot.exists()) {
+    list.innerHTML = "No data found";
+    return;
+  }
 
   snapshot.forEach((child) => {
     let data = child.val();
     let key = child.key;
 
     let li = document.createElement("li");
-    li.innerHTML = data.english + " = " + data.bangla +
-      ` <button onclick="deleteWord('${key}')">❌</button>`;
+
+    li.innerHTML = `
+      <b>${data.english}</b> = ${data.bangla}
+      <button class="delete-btn" onclick="deleteWord('${key}')">❌</button>
+    `;
 
     list.appendChild(li);
   });
+});
+
+
+// 🔍 SEARCH
+window.searchWord = function () {
+  let value = document.getElementById("search").value.toLowerCase();
+  let items = document.querySelectorAll("li");
+
+  items.forEach(li => {
+    li.style.display = li.innerText.toLowerCase().includes(value) ? "" : "none";
+  });
+};
+
+
+// ⌨️ ENTER KEY SAVE
+document.getElementById("eng").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") saveWord();
+});
+
+document.getElementById("ban").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") saveWord();
 });
 
 </script>
