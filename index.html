@@ -15,15 +15,17 @@
 <ul id="list"></ul>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+
+// ⚠️ তোমার Firebase config বসাও
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
-  authDomain: "dictionary-app-6ce65.firebaseapp.com",
-  databaseURL: "https://dictionary-app-6ce65-default-rtdb.firebaseio.com/",
-  projectId: "dictionary-app-6ce65",
-  storageBucket: "dictionary-app-6ce65.appspot.com",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com/",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
   messagingSenderId: "XXXX",
   appId: "XXXX"
 };
@@ -31,7 +33,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Save word
+// ✅ SAVE
 window.saveWord = function () {
   let eng = document.getElementById("eng").value;
   let ban = document.getElementById("ban").value;
@@ -50,20 +52,30 @@ window.saveWord = function () {
   document.getElementById("ban").value = "";
 };
 
-// Show words
+// ❌ DELETE
+window.deleteWord = function (key) {
+  if (confirm("Delete this word?")) {
+    remove(ref(db, "words/" + key));
+  }
+};
+
+// 📋 SHOW
 onValue(ref(db, "words"), (snapshot) => {
   let list = document.getElementById("list");
   list.innerHTML = "";
 
   snapshot.forEach((child) => {
     let data = child.val();
+    let key = child.key;
 
     let li = document.createElement("li");
-    li.innerText = data.english + " = " + data.bangla;
+    li.innerHTML = data.english + " = " + data.bangla +
+      ` <button onclick="deleteWord('${key}')">❌</button>`;
 
     list.appendChild(li);
   });
 });
+
 </script>
 
 </body>
