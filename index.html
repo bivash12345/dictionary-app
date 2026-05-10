@@ -1,179 +1,283 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Dictionary App</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English ➜ Bangla Dictionary</title>
 
   <style>
-    body {
-      font-family: Arial;
-      text-align: center;
-      background: #f5f5f5;
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family: Arial, sans-serif;
     }
 
-    h2 {
-      color: #333;
+    body{
+      background:#f1f3f6;
+      padding:20px;
     }
 
-    input {
-      padding: 10px;
-      margin: 5px;
-      width: 200px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+    .header{
+      background:linear-gradient(to right,#1f4ed8,#2546b8);
+      color:white;
+      padding:30px;
+      border-radius:12px 12px 0 0;
     }
 
-    button {
-      padding: 8px 12px;
-      margin: 5px;
-      border: none;
-      background: #007bff;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
+    .header h1{
+      font-size:45px;
     }
 
-    button:hover {
-      background: #0056b3;
+    .header p{
+      margin-top:10px;
+      font-size:22px;
     }
 
-    li {
-      list-style: none;
-      background: white;
-      margin: 8px auto;
-      padding: 10px;
-      width: 300px;
-      border-radius: 5px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    .container{
+      background:white;
+      padding:20px;
+      border-radius:0 0 12px 12px;
+      display:flex;
+      gap:20px;
+      flex-wrap:wrap;
     }
 
-    .delete-btn {
-      background: red;
-      margin-left: 10px;
+    .left,
+    .right{
+      flex:1;
+      min-width:320px;
+      border:1px solid #ddd;
+      border-radius:10px;
+      padding:20px;
     }
 
-    .delete-btn:hover {
-      background: darkred;
+    h2{
+      margin-bottom:20px;
+    }
+
+    .blue{
+      color:#1d4ed8;
+    }
+
+    .green{
+      color:#16a34a;
+    }
+
+    input{
+      width:100%;
+      padding:14px;
+      margin-top:10px;
+      margin-bottom:15px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      font-size:18px;
+    }
+
+    button{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:8px;
+      color:white;
+      font-size:20px;
+      cursor:pointer;
+    }
+
+    .search-btn{
+      background:#2563eb;
+    }
+
+    .add-btn{
+      background:#16a34a;
+    }
+
+    #result{
+      margin-top:20px;
+      background:#eefbf0;
+      border:1px solid #b6e3c1;
+      padding:20px;
+      border-radius:10px;
+      font-size:24px;
+      color:#111;
+    }
+
+    .word-list{
+      margin-top:25px;
+      max-height:350px;
+      overflow-y:auto;
+      border:1px solid #ddd;
+      border-radius:10px;
+    }
+
+    .word-item{
+      display:flex;
+      justify-content:space-between;
+      padding:15px;
+      border-bottom:1px solid #eee;
+      font-size:22px;
+    }
+
+    .note{
+      margin-top:30px;
+      background:#eef4ff;
+      border:1px solid #bfd3ff;
+      padding:20px;
+      border-radius:10px;
+      color:#1d4ed8;
+      font-size:18px;
+    }
+
+    .delete-btn{
+      background:red;
+      color:white;
+      border:none;
+      padding:5px 10px;
+      border-radius:5px;
+      cursor:pointer;
     }
   </style>
 </head>
 
 <body>
 
-<h2>📘 English → Bangla Dictionary</h2>
+  <div class="header">
+    <h1>📖 English ➜ Bangla Dictionary</h1>
+    <p>Search and add new words to the dictionary</p>
+  </div>
 
-<input id="eng" placeholder="English word">
-<input id="ban" placeholder="Bangla meaning">
-<br>
-<button onclick="saveWord()">Save</button>
+  <div class="container">
 
-<br><br>
+    <!-- LEFT SIDE -->
+    <div class="left">
 
-<input id="search" placeholder="🔍 Search..." oninput="searchWord()">
+      <h2 class="blue">🔍 Search Word</h2>
 
-<br><br>
+      <input type="text" id="searchWord" placeholder="Enter English word">
 
-<ul id="list">Loading...</ul>
+      <button class="search-btn" onclick="searchMeaning()">
+        Search
+      </button>
 
-<script type="module">
+      <div id="result">
+        বাংলা অর্থ: ---
+      </div>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+      <h2 style="margin-top:25px;">All Words</h2>
 
+      <div class="word-list" id="wordList"></div>
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    </div>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDIejKxhqJRp2l3d9WGvANRZY8qGK16pXE",
-  authDomain: "dictionary-app-6ce65.firebaseapp.com",
-  databaseURL: "https://dictionary-app-6ce65-default-rtdb.firebaseio.com",
-  projectId: "dictionary-app-6ce65",
-  storageBucket: "dictionary-app-6ce65.firebasestorage.app",
-  messagingSenderId: "109913060181",
-  appId: "1:109913060181:web:2477c4b0c3405cd58d35dc",
-  measurementId: "G-GY63RW6YW5"
-};
+    <!-- RIGHT SIDE -->
+    <div class="right">
 
+      <h2 class="green">➕ Add New Word</h2>
 
-// Init
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+      <label>English Word</label>
+      <input type="text" id="englishInput" placeholder="Enter English word">
 
+      <label>Bangla Meaning</label>
+      <input type="text" id="banglaInput" placeholder="Enter Bangla meaning">
 
-// ✅ SAVE
-window.saveWord = function () {
-  let eng = document.getElementById("eng").value.trim();
-  let ban = document.getElementById("ban").value.trim();
+      <button class="add-btn" onclick="addWord()">
+        Add Word
+      </button>
 
-  if (eng === "" || ban === "") {
-    alert("⚠️ Fill all fields");
-    return;
-  }
+      <div class="note">
+        ℹ️ Note: Make sure the word doesn't already exist.
+      </div>
 
-  push(ref(db, "words"), {
-    english: eng,
-    bangla: ban
-  });
+    </div>
 
-  document.getElementById("eng").value = "";
-  document.getElementById("ban").value = "";
-};
+  </div>
 
+  <script>
 
-// ❌ DELETE
-window.deleteWord = function (key) {
-  if (confirm("Delete this word?")) {
-    remove(ref(db, "words/" + key));
-  }
-};
+    let dictionary = {
+      hello: "হ্যালো",
+      book: "বই",
+      apple: "আপেল",
+      water: "পানি",
+      school: "স্কুল",
+      teacher: "শিক্ষক",
+      student: "ছাত্র",
+      computer: "কম্পিউটার"
+    };
 
+    // Search Function
+    function searchMeaning(){
 
-// 📋 SHOW DATA
-onValue(ref(db, "words"), (snapshot) => {
-  let list = document.getElementById("list");
-  list.innerHTML = "";
+      let word = document.getElementById("searchWord").value.toLowerCase();
 
-  if (!snapshot.exists()) {
-    list.innerHTML = "No data found";
-    return;
-  }
+      let result = document.getElementById("result");
 
-  snapshot.forEach((child) => {
-    let data = child.val();
-    let key = child.key;
+      if(dictionary[word]){
+        result.innerHTML = "বাংলা অর্থ: " + dictionary[word];
+      }
+      else{
+        result.innerHTML = "Word not found!";
+      }
+    }
 
-    let li = document.createElement("li");
+    // Add Word
+    function addWord(){
 
-    li.innerHTML = `
-      <b>${data.english}</b> = ${data.bangla}
-      <button class="delete-btn" onclick="deleteWord('${key}')">❌</button>
-    `;
+      let english = document.getElementById("englishInput").value.toLowerCase();
 
-    list.appendChild(li);
-  });
-});
+      let bangla = document.getElementById("banglaInput").value;
 
+      if(english === "" || bangla === ""){
+        alert("Fill all fields");
+        return;
+      }
 
-// 🔍 SEARCH
-window.searchWord = function () {
-  let value = document.getElementById("search").value.toLowerCase();
-  let items = document.querySelectorAll("li");
+      if(dictionary[english]){
+        alert("Word already exists!");
+        return;
+      }
 
-  items.forEach(li => {
-    li.style.display = li.innerText.toLowerCase().includes(value) ? "" : "none";
-  });
-};
+      dictionary[english] = bangla;
 
+      showWords();
 
-// ⌨️ ENTER KEY SAVE
-document.getElementById("eng").addEventListener("keypress", function(e) {
-  if (e.key === "Enter") saveWord();
-});
+      document.getElementById("englishInput").value = "";
+      document.getElementById("banglaInput").value = "";
 
-document.getElementById("ban").addEventListener("keypress", function(e) {
-  if (e.key === "Enter") saveWord();
-});
+      alert("Word Added Successfully!");
+    }
 
-</script>
+    // Show All Words
+    function showWords(){
+
+      let wordList = document.getElementById("wordList");
+
+      wordList.innerHTML = "";
+
+      for(let word in dictionary){
+
+        wordList.innerHTML += `
+          <div class="word-item">
+            <span>${word} ➜ ${dictionary[word]}</span>
+            <button class="delete-btn"
+            onclick="deleteWord('${word}')">X</button>
+          </div>
+        `;
+      }
+    }
+
+    // Delete Word
+    function deleteWord(word){
+
+      delete dictionary[word];
+
+      showWords();
+    }
+
+    // First Load
+    showWords();
+
+  </script>
 
 </body>
 </html>
